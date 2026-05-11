@@ -12,6 +12,12 @@ The system is based on affordable, accessible components, focusing on low-cost i
 
 ---
 
+## Project Status
+
+Current stage: functional prototype under development and testing.
+
+---
+
 ## Problem Definition
 
 Visually impaired people face a high risk of collisions during daily mobility, especially with obstacles positioned above the detection range of traditional canes. These collisions may cause injuries, falls, and reduced independence.
