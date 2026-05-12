@@ -1,42 +1,45 @@
 const int TRIG = 5;
 const int ECHO = 18;
-const int MOTOR = 23;
+const int vibrationMotor = 23;
 
-// C++ code
-//
 void setup()
 {
   Serial.begin(115200);
+
   pinMode(TRIG, OUTPUT);
   pinMode(ECHO, INPUT);
-  pinMode(MOTOR, OUTPUT);
+
+  pinMode(vibrationMotor, OUTPUT);
+
+  digitalWrite(TRIG, LOW);
 }
 
 void loop()
 {
   digitalWrite(TRIG, LOW);
   delayMicroseconds(2);
-  
+
   digitalWrite(TRIG, HIGH);
   delayMicroseconds(10);
-  
-  digitalWrite(TRIG, LOW);
-  
-  long duracao = pulseIn(ECHO, HIGH);
-  
-  float distancia = duracao * 0.034 / 2;
-  
-  Serial.print("Distancia: ");
-  Serial.print(distancia);
-  Serial.println(" cm");
-  
-  
 
-  if (distancia < 20) {
-  digitalWrite(MOTOR, HIGH);
-}
-else {
-  digitalWrite(MOTOR, LOW);
-}
-delay(300);
+  digitalWrite(TRIG, LOW);
+
+  long duration = pulseIn(ECHO, HIGH);
+
+  float distance = duration * 0.034 / 2;
+
+  Serial.print("Distance: ");
+  Serial.print(distance, 1);
+  Serial.println(" cm");
+
+  if (distance < 20)
+  {
+    digitalWrite(vibrationMotor, HIGH);
+  }
+  else
+  {
+    digitalWrite(vibrationMotor, LOW);
+  }
+
+  delay(300);
 }
