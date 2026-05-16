@@ -37,6 +37,15 @@ This project aims to bridge the gap between accessibility, affordability, and sa
 
 ---
 
+## Current Progress
+
+- Functional ultrasonic distance detection
+- Distance-based haptic feedback logic
+- Dual motor control structure implemented
+- Real-world hardware testing on ESP32
+
+---
+
 ## Future Improvements
 
 - Elevated obstacle detection
@@ -45,7 +54,7 @@ This project aims to bridge the gap between accessibility, affordability, and sa
 - Compact and resistant enclosure
 - Smarter vibration feedback system
 
-
+---
 
 ## Prototype
 
