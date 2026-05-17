@@ -53,6 +53,7 @@ This project aims to bridge the gap between accessibility, affordability, and sa
 - Improved power management
 - Compact and resistant enclosure
 - Smarter vibration feedback system
+- Motion-based power saving system using IMU sensors
 
 ---
 
