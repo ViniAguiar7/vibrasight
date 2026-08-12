@@ -175,11 +175,21 @@ Further improvements may include measurement filtering, sensor validation, impro
 
 ## Prototype
 
+### V1
+
 <p align="center">
   <img src="assets/prototype-v1.jpeg" width="600">
 </p>
 
 V1 prototype using an ESP32, ultrasonic sensing, and haptic feedback.
+
+### V1.4
+
+<p align="center">
+  <img src="assets/prototype-v1.4.jpeg" width="600">
+</p>
+
+Current V1.4 prototype using an ESP32, three ultrasonic sensors, and three vibration motors.
 
 ---
 
