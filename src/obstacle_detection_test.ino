@@ -37,6 +37,32 @@ bool motorState_Right = LOW;
 bool motorState_Top = LOW;
 
 
+// Ultrasonic sensor timing
+unsigned long sensorTimer = 0;
+unsigned long echoStart = 0;
+
+const unsigned long ECHO_TIMEOUT = 30000;
+const unsigned long SENSOR_GAP = 3000;
+
+
+// Sensor states
+const int SENSOR_LEFT = 0;
+const int SENSOR_RIGHT = 1;
+const int SENSOR_TOP = 2;
+
+const int WAITING_FOR_TRIGGER = 0;
+const int WAITING_FOR_ECHO_START = 1;
+const int WAITING_FOR_ECHO_END = 2;
+const int WAITING_FOR_NEXT_SENSOR = 3;
+
+int currentSensor = SENSOR_LEFT;
+int sensorState = WAITING_FOR_TRIGGER;
+
+float distance_Left = 0;
+float distance_Right = 0;
+float distance_Top = 0;
+
+
 // C++ code
 //
 void setup() {
@@ -53,61 +79,192 @@ void setup() {
   pinMode(rightMotor, OUTPUT);
   pinMode(leftMotor, OUTPUT);
   pinMode(topMotor, OUTPUT);
+
+  digitalWrite(TRIG_Left, LOW);
+  digitalWrite(TRIG_Right, LOW);
+  digitalWrite(TRIG_Top, LOW);
 }
 
 
 void loop() {
 
-  // Measure left side
-  digitalWrite(TRIG_Left, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIG_Left, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_Left, LOW);
-
-  long duration_Left = pulseIn(ECHO_Left, HIGH);
-
-
-  // Measure right side
-  digitalWrite(TRIG_Right, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIG_Right, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_Right, LOW);
-
-  long duration_Right = pulseIn(ECHO_Right, HIGH);
-
-
-  // Measure top side
-  digitalWrite(TRIG_Top, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIG_Top, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_Top, LOW);
-
-  long duration_Top = pulseIn(ECHO_Top, HIGH);
-
-
-  float distance_Left = duration_Left * 0.034 / 2;
-  float distance_Right = duration_Right * 0.034 / 2;
-  float distance_Top = duration_Top * 0.034 / 2;
-
-
-  Serial.print("Distance Left: ");
-  Serial.print(distance_Left);
-  Serial.println(" cm");
-
-  Serial.print("Distance Right: ");
-  Serial.print(distance_Right);
-  Serial.println(" cm");
-
-  Serial.print("Distance Top: ");
-  Serial.print(distance_Top);
-  Serial.println(" cm");
-
-
-  // Current time
   unsigned long currentMillis = millis();
+  unsigned long currentMicros = micros();
+
+
+  // Ultrasonic sensors
+
+  if (sensorState == WAITING_FOR_TRIGGER) {
+
+    if (currentSensor == SENSOR_LEFT) {
+      digitalWrite(TRIG_Left, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(TRIG_Left, LOW);
+    }
+
+    else if (currentSensor == SENSOR_RIGHT) {
+      digitalWrite(TRIG_Right, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(TRIG_Right, LOW);
+    }
+
+    else if (currentSensor == SENSOR_TOP) {
+      digitalWrite(TRIG_Top, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(TRIG_Top, LOW);
+    }
+
+    sensorTimer = currentMicros;
+    sensorState = WAITING_FOR_ECHO_START;
+  }
+
+
+  else if (sensorState == WAITING_FOR_ECHO_START) {
+
+    int echoPin;
+
+    if (currentSensor == SENSOR_LEFT) {
+      echoPin = ECHO_Left;
+    }
+
+    else if (currentSensor == SENSOR_RIGHT) {
+      echoPin = ECHO_Right;
+    }
+
+    else {
+      echoPin = ECHO_Top;
+    }
+
+
+    if (digitalRead(echoPin) == HIGH) {
+      echoStart = currentMicros;
+      sensorState = WAITING_FOR_ECHO_END;
+    }
+
+    else if (currentMicros - sensorTimer >= ECHO_TIMEOUT) {
+
+      if (currentSensor == SENSOR_LEFT) {
+        distance_Left = 999;
+      }
+
+      else if (currentSensor == SENSOR_RIGHT) {
+        distance_Right = 999;
+      }
+
+      else {
+        distance_Top = 999;
+      }
+
+      sensorTimer = currentMicros;
+      sensorState = WAITING_FOR_NEXT_SENSOR;
+    }
+  }
+
+
+  else if (sensorState == WAITING_FOR_ECHO_END) {
+
+    int echoPin;
+
+    if (currentSensor == SENSOR_LEFT) {
+      echoPin = ECHO_Left;
+    }
+
+    else if (currentSensor == SENSOR_RIGHT) {
+      echoPin = ECHO_Right;
+    }
+
+    else {
+      echoPin = ECHO_Top;
+    }
+
+
+    if (digitalRead(echoPin) == LOW) {
+
+      unsigned long echoDuration = currentMicros - echoStart;
+
+      float distance = echoDuration * 0.034 / 2;
+
+
+      if (currentSensor == SENSOR_LEFT) {
+        distance_Left = distance;
+      }
+
+      else if (currentSensor == SENSOR_RIGHT) {
+        distance_Right = distance;
+      }
+
+      else {
+        distance_Top = distance;
+      }
+
+
+      sensorTimer = currentMicros;
+      sensorState = WAITING_FOR_NEXT_SENSOR;
+    }
+
+    else if (currentMicros - echoStart >= ECHO_TIMEOUT) {
+
+      if (currentSensor == SENSOR_LEFT) {
+        distance_Left = 999;
+      }
+
+      else if (currentSensor == SENSOR_RIGHT) {
+        distance_Right = 999;
+      }
+
+      else {
+        distance_Top = 999;
+      }
+
+      sensorTimer = currentMicros;
+      sensorState = WAITING_FOR_NEXT_SENSOR;
+    }
+  }
+
+
+  else if (sensorState == WAITING_FOR_NEXT_SENSOR) {
+
+    if (currentMicros - sensorTimer >= SENSOR_GAP) {
+
+      if (currentSensor == SENSOR_LEFT) {
+        currentSensor = SENSOR_RIGHT;
+      }
+
+      else if (currentSensor == SENSOR_RIGHT) {
+        currentSensor = SENSOR_TOP;
+      }
+
+      else {
+        currentSensor = SENSOR_LEFT;
+      }
+
+      sensorState = WAITING_FOR_TRIGGER;
+    }
+  }
+
+
+  // Print distances
+
+  static unsigned long previousSerialMillis = 0;
+
+  if (currentMillis - previousSerialMillis >= 300) {
+
+    previousSerialMillis = currentMillis;
+
+    Serial.print("Distance Left: ");
+    Serial.print(distance_Left);
+    Serial.println(" cm");
+
+    Serial.print("Distance Right: ");
+    Serial.print(distance_Right);
+    Serial.println(" cm");
+
+    Serial.print("Distance Top: ");
+    Serial.print(distance_Top);
+    Serial.println(" cm");
+
+    Serial.println();
+  }
 
 
   // Left Side
@@ -125,6 +282,7 @@ void loop() {
       if (motorState_Left == LOW) {
         motorState_Left = HIGH;
       }
+
       else {
         motorState_Left = LOW;
       }
@@ -141,6 +299,7 @@ void loop() {
       if (motorState_Left == LOW) {
         motorState_Left = HIGH;
       }
+
       else {
         motorState_Left = LOW;
       }
@@ -170,6 +329,7 @@ void loop() {
       if (motorState_Right == LOW) {
         motorState_Right = HIGH;
       }
+
       else {
         motorState_Right = LOW;
       }
@@ -186,6 +346,7 @@ void loop() {
       if (motorState_Right == LOW) {
         motorState_Right = HIGH;
       }
+
       else {
         motorState_Right = LOW;
       }
@@ -215,6 +376,7 @@ void loop() {
       if (motorState_Top == LOW) {
         motorState_Top = HIGH;
       }
+
       else {
         motorState_Top = LOW;
       }
@@ -231,6 +393,7 @@ void loop() {
       if (motorState_Top == LOW) {
         motorState_Top = HIGH;
       }
+
       else {
         motorState_Top = LOW;
       }
